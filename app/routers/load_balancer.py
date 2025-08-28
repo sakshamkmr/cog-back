@@ -1,30 +1,3 @@
-# from fastapi import APIRouter
-# from pydantic import BaseModel
-# from typing import List
-
-# router = APIRouter()   # 👈 define router here
-
-# class Order(BaseModel):
-#     id: int
-#     packingTime: int
-
-# class LoadBalancerRequest(BaseModel):
-#     orders: List[Order]
-#     stations: int
-
-# @router.post("/assign-orders")   # 👈 use router, not app
-# def assign_orders(req: LoadBalancerRequest):
-#     station_loads = [0] * req.stations
-#     assignments = []
-
-#     for order in req.orders:
-#         station = station_loads.index(min(station_loads))
-#         assignments.append({"orderId": order.id, "station": station + 1})
-#         station_loads[station] += order.packingTime
-
-#     summary = [{"station": i+1, "totalTime": load} for i, load in enumerate(station_loads)]
-
-#     return {"assignments": assignments, "stationLoadSummary": summary}
 from fastapi import APIRouter
 from pydantic import BaseModel
 from typing import List

@@ -1,4 +1,3 @@
-# app/services/optimizer.py
 import numpy as np
 
 # ----------- LOAD BALANCER OPTIMIZER ----------- #
@@ -30,41 +29,6 @@ def optimize_orders(orders, stations: int):
 
 
 # ----------- INVENTORY OPTIMIZER ----------- #
-# def optimize_inventory(skuData, capacity: int):
-    """
-    Proportional allocation optimizer for inventory.
-    """
-    effective_demand = {sku.sku: min(sku.forecastDemand, sku.actualDemand) for sku in skuData}
-    total_demand = sum(effective_demand.values())
-    total_stock = sum([sku.stock for sku in skuData])
-    distributable_stock = min(total_stock, capacity)
-
-    allocationPlan, shortages, excess = [], [], []
-    provisional_allocations = {}
-
-    for sku in skuData:
-        demand = effective_demand[sku.sku]
-        weight = demand / total_demand if total_demand > 0 else 0
-        provisional_allocations[sku.sku] = weight * distributable_stock
-
-    for sku in skuData:
-        demand = effective_demand[sku.sku]
-        alloc = int(round(min(sku.stock, demand, provisional_allocations[sku.sku])))
-        allocationPlan.append({"sku": sku.sku, "allocated": alloc})
-
-        if alloc < demand:
-            shortages.append({"sku": sku.sku, "shortage": demand - alloc})
-
-        if alloc < sku.stock:
-            excess.append({"sku": sku.sku, "excess": sku.stock - alloc})
-
-    return {
-        "allocationPlan": allocationPlan,
-        "shortages": shortages,
-        "excess": excess,
-        "insight": f"Distributed {distributable_stock} units fairly across SKUs using proportional allocation."
-    }
-# A conceptual example for app/services/optimizer.py
 import pulp
 
 def optimize_inventory(skuData, capacity: int):
@@ -95,7 +59,6 @@ def optimize_inventory(skuData, capacity: int):
     # 5. Solve the model
     model.solve()
 
-    # --- START OF NEW/CORRECTED CODE ---
 
     # Check if the solution is optimal before proceeding
     if model.status != pulp.LpStatusOptimal:
