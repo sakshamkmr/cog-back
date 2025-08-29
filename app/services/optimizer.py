@@ -1,15 +1,21 @@
 import numpy as np
 
 # ----------- LOAD BALANCER OPTIMIZER ----------- #
+import numpy as np
+
 def optimize_orders(orders, stations: int):
     """
-    Simple greedy load balancing algorithm.
-    Assign orders to stations to balance total load.
+    LPT (Longest Processing Time first) load balancing algorithm.
+    Assign orders to stations by sorting jobs descending and
+    always giving next largest job to least loaded station.
     """
+    # Sort orders by packingTime (largest first)
+    sorted_orders = sorted(orders, key=lambda x: x["packingTime"], reverse=True)
+
     station_loads = [0] * stations
     assignments = []
 
-    for order in orders:
+    for order in sorted_orders:
         # Find the station with minimum load
         min_station = int(np.argmin(station_loads))
         station_loads[min_station] += order["packingTime"]
@@ -18,14 +24,23 @@ def optimize_orders(orders, stations: int):
             "station": min_station + 1
         })
 
-    station_summary = [{"station": i+1, "totalTime": station_loads[i]} for i in range(stations)]
+    station_summary = [
+        {"station": i+1, "totalTime": station_loads[i]} 
+        for i in range(stations)
+    ]
+
+    imbalance = round(
+        (max(station_loads) - min(station_loads)) / (sum(station_loads)/stations) * 100,
+        2
+    )
 
     return {
         "assignments": assignments,
         "stationLoadSummary": station_summary,
-        "imbalancePercent": round((max(station_loads) - min(station_loads)) / (sum(station_loads)/stations) * 100, 2),
-        "insight": f"Load imbalance reduced to {round((max(station_loads) - min(station_loads)) / (sum(station_loads)/stations) * 100, 2)}%."
+        "imbalancePercent": imbalance,
+        "insight": f"LPT scheduling reduced load imbalance to {imbalance}%."
     }
+
 
 
 # ----------- INVENTORY OPTIMIZER ----------- #
