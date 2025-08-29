@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Supply Chain Optimizer</title>
+    <!-- ReCharts Library -->
+    <script src="https://unpkg.com/recharts/umd/Recharts.min.js"></script>
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --navy: #0a192f;
+            --light-navy: #112240;
+            --lightest-navy: #233554;
+            --navy-shadow: rgba(2, 12, 27, 0.7);
+            --white: #e6f1ff;
+            --green: #64ffda;
+            --green-tint: rgba(100, 255, 218, 0.1);
+            --transition: all 0.25s cubic-bezier(0.645, 0.045, 0.355, 1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background-color: var(--navy);
+            color: var(--white);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--lightest-navy);
+            animation: fadeInDown 1s ease;
+        }
+
+        .logo {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--white);
+            display: flex;
+            align-items: center;
+        }
+
+        .logo i {
+            color: var(--green);
+            margin-right: 0.5rem;
+        }
+
+        .app-selector {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .app-btn {
+            background: var(--lightest-navy);
+            border: none;
+            color: var(--white);
+            padding: 0.75rem 1.5rem;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: var(--transition);
+            font-weight: 500;
+        }
+
+        .app-btn.active {
+            background: var(--green);
+            color: var(--navy);
+        }
+
+        .app-btn:hover:not(.active) {
+            background: var(--light-navy);
+        }
+
+        .dashboard {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 2rem;
+        }
+
+        .card {
+            background: var(--light-navy);
+            border-radius: 10px;
+            padding: 2rem;
+            box-shadow: 0 10px 30px var(--navy-shadow);
+            transition: var(--transition);
+            animation: fadeIn 0.5s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px var(--navy-shadow);
+        }
+
+        .card-title {
+            font-size: 1.5rem;
+            margin-bottom: 1.5rem;
+            color: var(--green);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .upload-area {
+            border: 2px dashed var(--lightest-navy);
+            border-radius: 8px;
+            padding: 3rem 2rem;
+            text-align: center;
+            cursor: pointer;
+            transition: var(--transition);
+            margin-bottom: 1.5rem;
+        }
+
+        .upload-area:hover {
+            border-color: var(--green);
+        }
+
+        .upload-area i {
+            font-size: 3rem;
+            color: var(--green);
+            margin-bottom: 1rem;
+        }
+
+        .upload-text {
+            margin-bottom: 1rem;
+        }
+
+        .upload-btn {
+            background: var(--green);
+            color: var(--navy);
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: var(--transition);
+        }
+
+        .upload-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(100, 255, 218, 0.3);
+        }
+
+        .file-summary {
+            background: var(--lightest-navy);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-top: 1.5rem;
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .action-btn {
+            background: var(--green);
+            color: var(--navy);
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: var(--transition);
+            margin-top: 1.5rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .action-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(100, 255, 218, 0.3);
+        }
+
+        .action-btn:disabled {
+            background: var(--lightest-navy);
+            color: var(--white);
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .charts-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .chart {
+            background: var(--lightest-navy);
+            border-radius: 8px;
+            padding: 1.5rem;
+            height: 300px;
+        }
+
+        .insight-card {
+            background: var(--lightest-navy);
+            border-left: 4px solid var(--green);
+            border-radius: 4px;
+            padding: 1.5rem;
+            margin-top: 1.5rem;
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1.5rem;
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .data-table th, .data-table td {
+            padding: 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid var(--lightest-navy);
+        }
+
+        .data-table th {
+            background: var(--lightest-navy);
+            color: var(--green);
+        }
+
+        .data-table tr:hover {
+            background: var(--lightest-navy);
+        }
+
+        .summary-section {
+            text-align: center;
+            padding: 2rem;
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .download-btn {
+            background: transparent;
+            border: 2px solid var(--green);
+            color: var(--green);
+            padding: 0.75rem 1.5rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: var(--transition);
+            margin-top: 1.5rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .download-btn:hover {
+            background: var(--green-tint);
+        }
+
+        .progress-bar {
+            height: 4px;
+            background: var(--lightest-navy);
+            border-radius: 2px;
+            margin-top: 1rem;
+            overflow: hidden;
+            display: none;
+        }
+
+        .progress {
+            height: 100%;
+            background: var(--green);
+            width: 0%;
+            transition: width 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes fadeInDown {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @media (max-width: 768px) {
+            .charts-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .app-selector {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo">
+                <i class="fas fa-chart-line"></i>
+                <span>SupplyChain Optimizer</span>
+            </div>
+            <div class="app-selector">
+                <button class="app-btn active" id="loadBalancerBtn">
+                    <i class="fas fa-balance-scale"></i> Load Balancer
+                </button>
+                <button class="app-btn" id="inventoryOptimizerBtn">
+                    <i class="fas fa-boxes"></i> Inventory Optimizer
+                </button>
+            </div>
+        </header>
+
+        <div class="dashboard">
+            <!-- Landing Page / Dashboard -->
+            <div class="card">
+                <h2 class="card-title">
+                    <i class="fas fa-tachometer-alt"></i> Dashboard
+                </h2>
+                <div id="loadBalancerIntro">
+                    <p>Balance packing station workloads to reduce bottlenecks and improve efficiency.</p>
+                </div>
+                <div id="inventoryOptimizerIntro" style="display: none;">
+                    <p>Optimize demand-supply balance to reduce stock-outs & excess inventory across distribution centers.</p>
+                </div>
+            </div>
+
+            <!-- Upload Section -->
+            <div class="card">
+                <h2 class="card-title">
+                    <i class="fas fa-file-upload"></i> Upload Data
+                </h2>
+                <div class="upload-area" id="dropZone">
+                    <i class="fas fa-cloud-upload-alt"></i>
+                    <p class="upload-text">Drag & drop your CSV file here</p>
+                    <p class="upload-text">OR</p>
+                    <button class="upload-btn">Select File</button>
+                    <input type="file" id="fileInput" accept=".csv" style="display: none;">
+                </div>
+                <div class="file-summary" id="fileSummary">
+                    <h3>File Summary</h3>
+                    <p id="summaryText"></p>
+                </div>
+                <div class="progress-bar" id="progressBar">
+                    <div class="progress" id="progress"></div>
+                </div>
+            </div>
+
+            <!-- Analysis Phase -->
+            <div class="card">
+                <h2 class="card-title">
+                    <i class="fas fa-chart-bar"></i> Analysis
+                </h2>
+                <button class="action-btn" id="analyzeBtn" disabled>
+                    <i class="fas fa-play"></i> Analyze Current State
+                </button>
+                
+                <div class="charts-container">
+                    <div class="chart" id="chart1">
+                        <!-- Chart will be rendered here by ReCharts -->
+                    </div>
+                    <div class="chart" id="chart2">
+                        <!-- Chart will be rendered here by ReCharts -->
+                    </div>
+                </div>
+                
+                <div class="insight-card" id="analysisInsights">
+                    <h3>Analysis Insights</h3>
+                    <p id="insightsText"></p>
+                </div>
+            </div>
+
+            <!-- Optimization Section -->
+            <div class="card">
+                <h2 class="card-title">
+                    <i class="fas fa-cogs"></i> Optimization
+                </h2>
+                <button class="action-btn" id="optimizeBtn" disabled>
+                    <i class="fas fa-bolt"></i> Run Optimizer
+                </button>
+                
+                <div class="charts-container">
+                    <div class="chart" id="chart3">
+                        <!-- Chart will be rendered here by ReCharts -->
+                    </div>
+                    <div class="chart" id="chart4">
+                        <!-- Chart will be rendered here by ReCharts -->
+                    </div>
+                </div>
+                
+                <table class="data-table" id="resultsTable">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Original</th>
+                            <th>New</th>
+                            <th>Time</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Table data will be populated by JavaScript -->
+                    </tbody>
+                </table>
+                
+                <div class="insight-card" id="optimizationInsights">
+                    <h3>Optimization Results</h3>
+                    <p id="resultsText"></p>
+                </div>
+            </div>
+
+            <!-- Final Summary -->
+            <div class="card summary-section" id="finalSummary">
+                <h2 class="card-title">
+                    <i class="fas fa-check-circle"></i> Optimization Complete
+                </h2>
+                <div class="insight-card">
+                    <h3>Successfully Optimized!</h3>
+                    <p id="summaryText">Workload successfully balanced across stations. Efficiency improved by 25%.</p>
+                </div>
+                <button class="download-btn">
+                    <i class="fas fa-download"></i> Download Results
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // DOM Elements
+        const fileInput = document.getElementById('fileInput');
+        const dropZone = document.getElementById('dropZone');
+        const fileSummary = document.getElementById('fileSummary');
+        const summaryText = document.getElementById('summaryText');
+        const analyzeBtn = document.getElementById('analyzeBtn');
+        const optimizeBtn = document.getElementById('optimizeBtn');
+        const analysisInsights = document.getElementById('analysisInsights');
+        const insightsText = document.getElementById('insightsText');
+        const optimizationInsights = document.getElementById('optimizationInsights');
+        const resultsText = document.getElementById('resultsText');
+        const resultsTable = document.getElementById('resultsTable');
+        const finalSummary = document.getElementById('finalSummary');
+        const progressBar = document.getElementById('progressBar');
+        const progress = document.getElementById('progress');
+        const loadBalancerBtn = document.getElementById('loadBalancerBtn');
+        const inventoryOptimizerBtn = document.getElementById('inventoryOptimizerBtn');
+        const loadBalancerIntro = document.getElementById('loadBalancerIntro');
+        const inventoryOptimizerIntro = document.getElementById('inventoryOptimizerIntro');
+
+        // App state
+        let currentApp = 'loadBalancer';
+        let uploadedFile = null;
+
+        // Event Listeners
+        dropZone.addEventListener('click', () => fileInput.click());
+        fileInput.addEventListener('change', handleFileUpload);
+        
+        // Drag and drop functionality
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.style.borderColor = '#64ffda';
+        });
+        
+        dropZone.addEventListener('dragleave', () => {
+            dropZone.style.borderColor = '#233554';
+        });
+        
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.style.borderColor = '#233554';
+            
+            if (e.dataTransfer.files.length) {
+                fileInput.files = e.dataTransfer.files;
+                handleFileUpload();
+            }
+        });
+
+        analyzeBtn.addEventListener('click', analyzeData);
+        optimizeBtn.addEventListener('click', runOptimization);
+        
+        loadBalancerBtn.addEventListener('click', () => switchApp('loadBalancer'));
+        inventoryOptimizerBtn.addEventListener('click', () => switchApp('inventoryOptimizer'));
+
+        // Functions
+        function switchApp(app) {
+            currentApp = app;
+            
+            if (app === 'loadBalancer') {
+                loadBalancerBtn.classList.add('active');
+                inventoryOptimizerBtn.classList.remove('active');
+                loadBalancerIntro.style.display = 'block';
+                inventoryOptimizerIntro.style.display = 'none';
+            } else {
+                loadBalancerBtn.classList.remove('active');
+                inventoryOptimizerBtn.classList.add('active');
+                loadBalancerIntro.style.display = 'none';
+                inventoryOptimizerIntro.style.display = 'block';
+            }
+            
+            // Reset the UI
+            resetUI();
+        }
+
+        function handleFileUpload() {
+            const file = fileInput.files[0];
+            if (!file) return;
+            
+            uploadedFile = file;
+            
+            // Show progress bar
+            progressBar.style.display = 'block';
+            
+            // Simulate file upload progress
+            let width = 0;
+            const interval = setInterval(() => {
+                if (width >= 100) {
+                    clearInterval(interval);
+                    processFile();
+                } else {
+                    width += 5;
+                    progress.style.width = width + '%';
+                }
+            }, 100);
+        }
+
+        function processFile() {
+            // In a real app, this would extract data from the CSV and convert to JSON
+            // For this example, we'll simulate the process
+            
+            setTimeout(() => {
+                // Hide progress bar
+                progressBar.style.display = 'none';
+                
+                // Show file summary
+                if (currentApp === 'loadBalancer') {
+                    summaryText.innerHTML = `10 orders uploaded, 3 stations available. Total packing time: 245 minutes.`;
+                } else {
+                    summaryText.innerHTML = `5 SKUs uploaded across 3 DCs. Plant capacity: 100 tons.`;
+                }
+                
+                fileSummary.style.display = 'block';
+                
+                // Enable analyze button
+                analyzeBtn.disabled = false;
+            }, 500);
+        }
+
+        function analyzeData() {
+            // Simulate API call to backend
+            analyzeBtn.disabled = true;
+            analyzeBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Analyzing...';
+            
+            setTimeout(() => {
+                // Show analysis insights
+                if (currentApp === 'loadBalancer') {
+                    insightsText.innerHTML = `Station 2 is overloaded by 25% compared to average. Overall imbalance = 30% inefficiency.`;
+                    renderLoadBalancerCharts();
+                } else {
+                    insightsText.innerHTML = `Mumbai DC has 15% stock-out risk. Kolkata DC has 20% overstock in Cookies. Festival surge detected: +40% demand.`;
+                    renderInventoryCharts();
+                }
+                
+                analysisInsights.style.display = 'block';
+                
+                // Enable optimize button
+                optimizeBtn.disabled = false;
+                
+                // Reset analyze button
+                analyzeBtn.innerHTML = '<i class="fas fa-play"></i> Analyze Current State';
+            }, 1500);
+        }
+
+        function runOptimization() {
+            // Simulate API call to backend
+            optimizeBtn.disabled = true;
+            optimizeBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Optimizing...';
+            
+            setTimeout(() => {
+                // Show optimization results
+                if (currentApp === 'loadBalancer') {
+                    resultsText.innerHTML = `Imbalance reduced from 30% → 5%. Bottlenecks solved.`;
+                    renderOptimizedLoadBalancerCharts();
+                    populateLoadBalancerTable();
+                } else {
+                    resultsText.innerHTML = `Stock-outs reduced from 15% → 2%. Overstock reduced from 20% → 5%.`;
+                    renderOptimizedInventoryCharts();
+                    populateInventoryTable();
+                }
+                
+                optimizationInsights.style.display = 'block';
+                resultsTable.style.display = 'table';
+                finalSummary.style.display = 'block';
+                
+                // Reset optimize button
+                optimizeBtn.innerHTML = '<i class="fas fa-bolt"></i> Run Optimizer';
+            }, 2000);
+        }
+
+        function resetUI() {
+            // Reset all UI elements
+            fileSummary.style.display = 'none';
+            analysisInsights.style.display = 'none';
+            optimizationInsights.style.display = 'none';
+            resultsTable.style.display = 'none';
+            finalSummary.style.display = 'none';
+            analyzeBtn.disabled = true;
+            optimizeBtn.disabled = true;
+            
+            // Clear charts
+            document.getElementById('chart1').innerHTML = '';
+            document.getElementById('chart2').innerHTML = '';
+            document.getElementById('chart3').innerHTML = '';
+            document.getElementById('chart4').innerHTML = '';
+            
+            // Clear table
+            resultsTable.querySelector('tbody').innerHTML = '';
+        }
+
+        // These functions would use ReCharts to render the charts
+        function renderLoadBalancerCharts() {
+            // In a real app, this would use ReCharts to render the bar chart and line chart
+            document.getElementById('chart1').innerHTML = '<p style="text-align:center; padding-top:120px">Bar Chart: Total workload per station</p>';
+            document.getElementById('chart2').innerHTML = '<p style="text-align:center; padding-top:120px">Line Chart: Orders vs Packing Time trend</p>';
+        }
+
+        function renderInventoryCharts() {
+            document.getElementById('chart1').innerHTML = '<p style="text-align:center; padding-top:120px">Bar Chart: Region-wise stock levels</p>';
+            document.getElementById('chart2').innerHTML = '<p style="text-align:center; padding-top:120px">Line Chart: Forecast vs Actual demand</p>';
+        }
+
+        function renderOptimizedLoadBalancerCharts() {
+            document.getElementById('chart3').innerHTML = '<p style="text-align:center; padding-top:120px">Bar Chart: Workload after balancing</p>';
+            document.getElementById('chart4').innerHTML = '<p style="text-align:center; padding-top:120px">Comparison Metrics Visualization</p>';
+        }
+
+        function renderOptimizedInventoryCharts() {
+            document.getElementById('chart3').innerHTML = '<p style="text-align:center; padding-top:120px">Bar Chart: Re-allocated stock levels</p>';
+            document.getElementById('chart4').innerHTML = '<p style="text-align:center; padding-top:120px">Comparison Metrics Visualization</p>';
+        }
+
+        function populateLoadBalancerTable() {
+            const tbody = resultsTable.querySelector('tbody');
+            tbody.innerHTML = '';
+            
+            // Sample data
+            const data = [
+                { id: 'ORD-001', original: 'Station 1', new: 'Station 2', time: '15 min' },
+                { id: 'ORD-002', original: 'Station 2', new: 'Station 3', time: '20 min' },
+                { id: 'ORD-003', original: 'Station 2', new: 'Station 1', time: '18 min' },
+                { id: 'ORD-004', original: 'Station 3', new: 'Station 1', time: '22 min' },
+                { id: 'ORD-005', original: 'Station 1', new: 'Station 3', time: '16 min' }
+            ];
+            
+            data.forEach(row => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${row.id}</td>
+                    <td>${row.original}</td>
+                    <td>${row.new}</td>
+                    <td>${row.time}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function populateInventoryTable() {
+            const tbody = resultsTable.querySelector('tbody');
+            tbody.innerHTML = '';
+            
+            // Sample data
+            const data = [
+                { sku: 'COOK-001', forecast: '100', actual: '120', stock: '80', allocation: '95', difference: '+15' },
+                { sku: 'CHIP-002', forecast: '80', actual: '75', stock: '100', allocation: '78', difference: '-3' },
+                { sku: 'DRNK-003', forecast: '150', actual: '160', stock: '120', allocation: '145', difference: '+15' },
+                { sku: 'CAND-004', forecast: '60', actual: '55', stock: '70', allocation: '58', difference: '-2' },
+                { sku: 'BISC-005', forecast: '90', actual: '95', stock: '85', allocation: '92', difference: '+7' }
+            ];
+            
+            // Change table headers for inventory
+            resultsTable.querySelector('thead').innerHTML = `
+                <tr>
+                    <th>SKU</th>
+                    <th>Forecast</th>
+                    <th>Actual</th>
+                    <th>Stock</th>
+                    <th>Allocation</th>
+                    <th>Difference</th>
+                </tr>
+            `;
+            
+            data.forEach(row => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${row.sku}</td>
+                    <td>${row.forecast}</td>
+                    <td>${row.actual}</td>
+                    <td>${row.stock}</td>
+                    <td>${row.allocation}</td>
+                    <td>${row.difference}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+    </script>
+</body>
+</html>
