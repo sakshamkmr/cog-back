@@ -11,7 +11,7 @@ origins = [
     "http://localhost:5173",  # Your local development frontend
     "http://localhost:3000",  # Another common local port
     # Add your deployed frontend URL here when you have it
-    # "https://your-frontend-app-name.vercel.app", 
+    "https://cog-front.vercel.app/"
 ]
 
 app.add_middleware(
