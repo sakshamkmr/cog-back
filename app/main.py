@@ -4,17 +4,24 @@ from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI(title="Smart Supply Chain Optimizer")
 
-# CORS (for frontend integration)
+# --- FIX: Updated CORS Configuration ---
+# Define the specific origins that are allowed to connect.
+# This is more secure than allowing everyone ("*").
+origins = [
+    "http://localhost:5173",  # Your local development frontend
+    "http://localhost:3000",  # Another common local port
+    # Add your deployed frontend URL here when you have it
+    # "https://your-frontend-app-name.vercel.app", 
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # in prod: put frontend URL
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"], # Allows all methods (GET, POST, etc.)
+    allow_headers=["*"], # Allows all headers
 )
 
 # Routers
 app.include_router(load_balancer.router, prefix="/api")
 app.include_router(inventory_optimizer.router, prefix="/api")
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
