@@ -41,11 +41,19 @@ def analyze_orders(orders, stations: int):
     random_loads = np.random.choice(range(1, stations + 1), size=len(df))
     df["assignedStation"] = random_loads
 
+    # station_summary = (
+    #     df.groupby("assignedStation")["packingTime"].sum().reset_index()
+    #     .rename(columns={"packingTime": "totalTime", "assignedStation": "station"})
+    #     .to_dict(orient="records")
+    # )
     station_summary = (
-        df.groupby("assignedStation")["packingTime"].sum().reset_index()
-        .rename(columns={"packingTime": "totalTime", "assignedStation": "station"})
+        df.groupby("assignedStation")
+        .agg(totalTime=("packingTime", "sum"), orders=("id", lambda x: list(x)))
+        .reset_index()
+        .rename(columns={"assignedStation": "station"})
         .to_dict(orient="records")
     )
+    assignments = df[["id", "packingTime", "assignedStation"]].to_dict(orient="records")
 
     # Compute imbalance %
     station_totals = [s["totalTime"] for s in station_summary]
@@ -56,12 +64,15 @@ def analyze_orders(orders, stations: int):
     else:
         imbalance = 0.0
 
+    
+
     return {
         "totalOrders": len(orders),
         "totalTime": float(total_time),
         "avgLoadPerStation": float(avg_load),
         "maxOrderTime": float(max_order),
         "stationLoadSummary": station_summary,
+        "assignments": assignments,
         "imbalancePercent": imbalance,
         "insight": f"Expected bottleneck: station(s) above {avg_load:.2f} mins avg load."
     }
