@@ -48,7 +48,9 @@ import pulp
 
 def optimize_inventory(skuData, capacity: int):
     """
-    Optimizes inventory allocation using a linear programming model.
+    Optimizes inventory allocation using a weighted linear programming model.
+    Each SKU has a priority weight (default = 1 if not provided).
+    Higher weight => more important to meet demand.
     """
     # 1. Create the model
     model = pulp.LpProblem("Inventory_Optimization", pulp.LpMinimize)
@@ -59,23 +61,25 @@ def optimize_inventory(skuData, capacity: int):
         for sku in skuData
     }
 
-    # 3. Define the Objective Function
+    # 3. Define Effective Demand and Weights
     effective_demand = {sku.sku: min(sku.forecastDemand, sku.actualDemand) for sku in skuData}
-    model += pulp.lpSum(
-        [effective_demand[sku.sku] - alloc_vars[sku.sku] for sku in skuData]
-    ), "Total_Shortage"
+    weights = {sku.sku: getattr(sku, "priority", 1) for sku in skuData}  
+    # if sku has no priority field, defaults to 1
 
-    # 4. Define Constraints
+    # 4. Define Weighted Objective Function
+    model += pulp.lpSum(
+        [weights[sku.sku] * (effective_demand[sku.sku] - alloc_vars[sku.sku]) for sku in skuData]
+    ), "Weighted_Shortage"
+
+    # 5. Constraints
     model += pulp.lpSum([alloc_vars[sku.sku] for sku in skuData]) <= capacity
     for sku in skuData:
         model += alloc_vars[sku.sku] <= sku.stock
         model += alloc_vars[sku.sku] <= effective_demand[sku.sku]
 
-    # 5. Solve the model
+    # 6. Solve the model
     model.solve()
 
-
-    # Check if the solution is optimal before proceeding
     if model.status != pulp.LpStatusOptimal:
         return {
             "allocationPlan": [],
@@ -84,26 +88,33 @@ def optimize_inventory(skuData, capacity: int):
             "status": pulp.LpStatus[model.status]
         }
 
-    # 6. Extract results and calculate shortage/excess
+    # 7. Extract Results
     allocationPlan = []
     shortages = []
     excess = []
 
     for sku in skuData:
-        # Get the optimal allocated value from the solver
         allocated_val = int(alloc_vars[sku.sku].varValue)
-        allocationPlan.append({"sku": sku.sku, "allocated": allocated_val})
+        allocationPlan.append({
+            "sku": sku.sku,
+            "allocated": allocated_val,
+            "priority": weights[sku.sku]
+        })
 
-        # Calculate shortage
         demand = effective_demand[sku.sku]
         if allocated_val < demand:
-            shortages.append({"sku": sku.sku, "shortage": demand - allocated_val})
+            shortages.append({
+                "sku": sku.sku,
+                "shortage": demand - allocated_val,
+                "priority": weights[sku.sku]
+            })
 
-        # Calculate excess
         if allocated_val < sku.stock:
-            excess.append({"sku": sku.sku, "excess": sku.stock - allocated_val})
-            
-    # 7. Return the complete data structure
+            excess.append({
+                "sku": sku.sku,
+                "excess": sku.stock - allocated_val
+            })
+
     return {
         "allocationPlan": allocationPlan,
         "shortages": shortages,
