@@ -5,3 +5,4 @@ numpy
 pulp
 python-multipart
 google-generativeai
+python-dotenv
